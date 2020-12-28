@@ -1,3 +1,6 @@
+* This repo originally forked from https://github.com/emedvede/wallet-microservice 
+* I want to refactor it for myself little by little
+
 # WALLET MICROSERVICE
 
 A simple wallet microservice running on the JVM that manages credit/debit transactions.

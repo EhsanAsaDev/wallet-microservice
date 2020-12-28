@@ -11,6 +11,8 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.orm.hibernate5.HibernateOptimisticLockingFailureException;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.math.BigDecimal;
@@ -39,6 +41,9 @@ public class WalletRepositoryTest {
     private WalletRepository walletRepository;
 
     @Autowired
+    private WalletRepository walletRepository2;
+
+    @Autowired
     private CurrencyRepository currencyRepository;
 
     private Wallet wallet1;
@@ -54,6 +59,7 @@ public class WalletRepositoryTest {
         wallet1 = new Wallet( USER ,new Currency(CURRENCY_ID,TEST_CURRENCY,LAST_UPDATED_BY),new BigDecimal(0),LAST_UPDATED_BY);
 
         wallet2 = new Wallet(USER,new Currency(CURRENCY_ID,TEST_CURRENCY,LAST_UPDATED_BY),new BigDecimal(0),LAST_UPDATED_BY);
+
 
         entityManager.persist(wallet1);
         entityManager.persist(wallet2);
@@ -153,6 +159,29 @@ public class WalletRepositoryTest {
         Wallet found1 = walletRepository.save(updated);
         assertNotNull(found1);
         assertTrue(found1.getBalance().equals(new BigDecimal(300)));
+    }
+
+    @Test
+    public void update_Balance_checkVersion() {
+        try {
+            Optional<Wallet> found = walletRepository.findById(wallet1.getId());
+            Wallet updated = found.get();
+
+            Wallet dirtyWallet = new Wallet(updated.getUserId(), updated.getCurrency(), updated.getBalance().add(BigDecimal.valueOf(400)), updated.getLastUpdatedBy());
+            dirtyWallet.setId(updated.getId());
+            dirtyWallet.setVersion(updated.getVersion());
+
+            updated.setBalance(updated.getBalance().add(BigDecimal.valueOf(300)));
+            Wallet found1 = walletRepository.save(updated);
+            assertNotNull(found1);
+            assertTrue(found1.getBalance().equals(new BigDecimal(300)));
+            entityManager.flush();
+
+            walletRepository.save(dirtyWallet);
+            fail();
+        } catch (ObjectOptimisticLockingFailureException x) {
+            assertTrue(x.getMessage().contains("Row was updated or deleted by another transaction"));
+        }
     }
 
     @Test

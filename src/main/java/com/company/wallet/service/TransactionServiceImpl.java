@@ -96,7 +96,6 @@ public class TransactionServiceImpl implements TransactionService {
      * No additional SQL query is used to select currency by Id and transaction type by Id
      * because JPARepository.getOne is used, which returns only reference for transaction object.
      *
-     * Set isolation = Isolation.SERIALIZABLE in order to avoid concurrency issues (in case of deploying application to multiple hosts)
      *
      * @param globalId unique global id
      * @param currencyName valid currency name
@@ -107,7 +106,7 @@ public class TransactionServiceImpl implements TransactionService {
      * @return created transaction
      * @throws WalletException if couldn't create transaction
      */
-    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.SERIALIZABLE, rollbackFor = WalletException.class)
+    @Transactional( rollbackFor = WalletException.class)
     @Override
     public Transaction createTransaction(@NotBlank String globalId, @NotBlank  String currencyName, @NotBlank String walletId, @NotBlank String transactionTypeId, @NotBlank String amount, String description) throws WalletException{
         try {

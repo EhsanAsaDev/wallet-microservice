@@ -104,15 +104,13 @@ class WalletServiceImpl implements WalletService{
      * If isCredit is set to true, takes absolute amount from  @param amount  and adds it to wallet balance.
      * If isCredit is set to false, takes absolute amount from  @param amount  and subtracts it from wallet balance.
      *
-     * Set isolation = Isolation.SERIALIZABLE in order to avoid concurrency issues (in case of deploying application to multiple hosts)
-     * This will slow down performance.
      * @param wallet
      * @param amount
      * @param isCredit
      * @return updated wallet
      * @throws WalletException if couldn't update wallet balance, e.g. not enough funds.
      */
-    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.SERIALIZABLE, rollbackFor = WalletException.class)
+    @Transactional(rollbackFor = WalletException.class)
     @Override
     public Wallet updateWalletAmount(@NotNull Wallet wallet,@NotBlank String amount,@NotNull  Boolean isCredit) throws WalletException{
         try {

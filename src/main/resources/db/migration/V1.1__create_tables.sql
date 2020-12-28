@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS  wallet
 (
 id SERIAL PRIMARY KEY,
 user_id VARCHAR NOT NULL,
+version INT(11) DEFAULT 0 NOT NULL,
 balance NUMERIC(15,2) DEFAULT 0 NOT NULL,
 --currency_id	VARCHAR(3) REFERENCES currency (id) NOT NULL,
 currency_id	integer REFERENCES currency (id) NOT NULL,

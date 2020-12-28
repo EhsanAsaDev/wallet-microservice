@@ -28,6 +28,10 @@ public class Wallet {
     @Column(name = "user_id")
     private String userId;
 
+    @Version
+    @Column(name = "version")
+    private int version;
+
     @Min(0)
     @Column(name = "balance",nullable = false)
     @NotNull(message = "Wallet balance must be provided")
@@ -119,5 +123,13 @@ public class Wallet {
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public int getVersion() {
+        return version;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
     }
 }
