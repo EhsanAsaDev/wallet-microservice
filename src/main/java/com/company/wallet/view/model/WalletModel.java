@@ -1,5 +1,7 @@
 package com.company.wallet.view.model;
 
+import com.company.wallet.entities.CurrencyType;
+
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
@@ -13,11 +15,12 @@ public class WalletModel {
 
     @NotBlank(message = "Field currency" + PART_NO_MANDATORY_FIELD)
     @NotNull(message = "Field currency" + PART_NO_MANDATORY_FIELD)
-    private String currency;
+    private CurrencyType currency;
 
-    public WalletModel(){}
+    public WalletModel() {
+    }
 
-    public WalletModel(String userId, String currency) {
+    public WalletModel(String userId, CurrencyType currency) {
         this.userId = userId;
         this.currency = currency;
     }
@@ -30,11 +33,11 @@ public class WalletModel {
         this.userId = userId;
     }
 
-    public String getCurrency() {
+    public CurrencyType getCurrency() {
         return currency;
     }
 
-    public void setCurrency(String currency) {
+    public void setCurrency(CurrencyType currency) {
         this.currency = currency;
     }
 }

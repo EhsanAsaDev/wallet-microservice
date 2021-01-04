@@ -1,10 +1,9 @@
 package com.company.wallet.service;
 
-import com.company.wallet.entities.Currency;
+import com.company.wallet.entities.CurrencyType;
 import com.company.wallet.entities.Wallet;
 import com.company.wallet.exceptions.ErrorMessage;
 import com.company.wallet.exceptions.WalletException;
-import com.company.wallet.repository.CurrencyRepository;
 import com.company.wallet.repository.TransactionRepository;
 import com.company.wallet.repository.WalletRepository;
 import com.company.wallet.helper.Helper;
@@ -14,8 +13,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.validation.annotation.Validated;
 
 import org.springframework.transaction.annotation.Transactional;
@@ -39,9 +36,6 @@ class WalletServiceImpl implements WalletService{
 
     @Autowired
     private TransactionRepository transactionRepository;
-
-    @Autowired
-    private CurrencyRepository currencyRepository;
 
     @Autowired
     private Helper inputParametersValidator;
@@ -81,20 +75,17 @@ class WalletServiceImpl implements WalletService{
     /**
      * Creates wallet based on currency.
      * @param userId valid currency id
-     * @param currencyName valid currency name
+     * @param currencyType valid currency name
      * @return created wallet
      * @throws WalletException
      */
     @Transactional(rollbackFor = WalletException.class)
     @Override
-    public Wallet createWallet(@NotBlank String userId,@NotBlank String currencyName) throws WalletException{
+    public Wallet createWallet(@NotBlank String userId,@NotNull CurrencyType currencyType) throws WalletException{
         try {
-            Currency currency = currencyRepository.findByName(currencyName);
-            String error = String.format(ErrorMessage.NO_CURRENCY_PRESENT,currencyName);
-            inputParametersValidator.conditionIsTrue(currency != null,error,HttpStatus.BAD_REQUEST.value());
-            return walletRepository.save(new Wallet(userId, currency, new BigDecimal(0), updatedBy));
+            return walletRepository.save(new Wallet(userId, currencyType, new BigDecimal(0), updatedBy));
         } catch (ObjectNotFoundException e){
-            throw new WalletException(String.format(ErrorMessage.NO_CURRENCY_PRESENT,currencyName),HttpStatus.BAD_REQUEST.value());
+            throw new WalletException(String.format(ErrorMessage.NO_CURRENCY_PRESENT,currencyType.name()),HttpStatus.BAD_REQUEST.value());
         }
     }
 

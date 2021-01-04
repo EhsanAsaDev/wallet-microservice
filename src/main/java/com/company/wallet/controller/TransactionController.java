@@ -31,9 +31,6 @@ public class TransactionController {
     @Autowired
     private TransactionService transactionService;
 
-    @Autowired
-    private Helper inputParametersValidator;
-
     @GetMapping(
             value = "/wallets/{id}/transactions",
             produces = MediaType.APPLICATION_JSON_VALUE
@@ -74,7 +71,7 @@ public class TransactionController {
 
 
         Transaction transaction = transactionService.createTransaction(transactionModel.getGlobalId(),transactionModel.getCurrency(),transactionModel.getWalletId(),
-                transactionModel.getTransactionTypeId(),transactionModel.getAmount(),transactionModel.getDescription());
+                transactionModel.getTransactionType(),transactionModel.getAmount(),transactionModel.getDescription());
         logger.info("Transaction created with id=" + transaction.getId() );
 
         return new GsonBuilder().registerTypeAdapterFactory(HibernateProxyTypeAdapter.FACTORY).

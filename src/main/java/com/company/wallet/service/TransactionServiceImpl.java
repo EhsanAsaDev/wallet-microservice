@@ -1,14 +1,12 @@
 package com.company.wallet.service;
 
-import com.company.wallet.entities.Currency;
+import com.company.wallet.entities.CurrencyType;
 import com.company.wallet.entities.Transaction;
 import com.company.wallet.entities.TransactionType;
 import com.company.wallet.entities.Wallet;
 import com.company.wallet.exceptions.ErrorMessage;
 import com.company.wallet.exceptions.WalletException;
-import com.company.wallet.repository.CurrencyRepository;
 import com.company.wallet.repository.TransactionRepository;
-import com.company.wallet.repository.TransactionTypeRepository;
 import com.company.wallet.helper.Helper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,8 +15,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.validation.annotation.Validated;
 
 //import javax.transaction.Transactional;
@@ -43,20 +39,13 @@ public class TransactionServiceImpl implements TransactionService {
     private WalletService walletService;
 
     @Autowired
-    private CurrencyRepository currencyRepository;
-
-    @Autowired
-    private TransactionTypeRepository transactionTypeRepository;
-
-    @Autowired
     private Helper inputParametersValidator;
 
 
     @Value("${db.updated_by}")
     private String updatedBy;
 
-    @Value("${application.transaction.type.credit}")
-    private String transactionTypeCredit;
+
 
     public String getUpdatedBy() {
         return updatedBy;
@@ -64,14 +53,6 @@ public class TransactionServiceImpl implements TransactionService {
 
     public void setUpdatedBy(String updatedBy) {
         this.updatedBy = updatedBy;
-    }
-
-    public String getTransactionTypeCredit() {
-        return transactionTypeCredit;
-    }
-
-    public void setTransactionTypeCredit(String transactionTypeCredit) {
-        this.transactionTypeCredit = transactionTypeCredit;
     }
 
     @Transactional(rollbackFor = WalletException.class)
@@ -98,9 +79,9 @@ public class TransactionServiceImpl implements TransactionService {
      *
      *
      * @param globalId unique global id
-     * @param currencyName valid currency name
+     * @param currencyType valid currency name
      * @param walletId valid wallet id
-     * @param transactionTypeId valid transaction type - 'C' or 'D'
+     * @param transactionType valid transaction type - 'C' or 'D'
      * @param amount transaction amount
      * @param description
      * @return created transaction
@@ -108,32 +89,24 @@ public class TransactionServiceImpl implements TransactionService {
      */
     @Transactional( rollbackFor = WalletException.class)
     @Override
-    public Transaction createTransaction(@NotBlank String globalId, @NotBlank  String currencyName, @NotBlank String walletId, @NotBlank String transactionTypeId, @NotBlank String amount, String description) throws WalletException{
+    public Transaction createTransaction(@NotBlank String globalId, @NotNull  CurrencyType currencyType, @NotBlank String walletId, @NotNull TransactionType transactionType, @NotBlank String amount, String description) throws WalletException{
         try {
             //Check for unique transaction globalId happens due to entity constrains on Transaction.globalId (unique=true)
 
-            //Get currency reference
-            Currency currency = currencyRepository.findByName(currencyName);
-            String error = String.format(ErrorMessage.NO_CURRENCY_PRESENT, currencyName);
-            inputParametersValidator.conditionIsTrue(currency != null,error,HttpStatus.BAD_REQUEST.value());
-
-            //Get transactionType reference
-            TransactionType transactionType = transactionTypeRepository.getOne(transactionTypeId);
-
             //Check wallet is present
             Wallet wallet = walletService.findById(Integer.valueOf(walletId));
-            error = String.format(ErrorMessage.NO_WALLET_FOUND, walletId);
+            String error = String.format(ErrorMessage.NO_WALLET_FOUND, walletId);
             inputParametersValidator.conditionIsTrue(wallet != null,error,HttpStatus.BAD_REQUEST.value());
 
             //check that transaction and wallet have the same currency
-            error = String.format(ErrorMessage.TRANSACTION_CURRENCY_NOT_EQ_WALLET_CURRENCY,currency.getName(), wallet.getCurrency().getName());
-            inputParametersValidator.conditionIsTrue(wallet.getCurrency().getId().equals(currency.getId()),error,HttpStatus.BAD_REQUEST.value());
+            error = String.format(ErrorMessage.TRANSACTION_CURRENCY_NOT_EQ_WALLET_CURRENCY, currencyType.name(), wallet.getCurrencyType().name());
+            inputParametersValidator.conditionIsTrue(wallet.getCurrencyType().name().equals(currencyType.name()),error,HttpStatus.BAD_REQUEST.value());
 
             //Update wallet, checks if there is enough funds for debit transaction. If not, throws WalletException
-            wallet = walletService.updateWalletAmount(wallet,amount,transactionTypeId.equalsIgnoreCase(transactionTypeCredit));
+            wallet = walletService.updateWalletAmount(wallet,amount,transactionType.equals(TransactionType.CREDIT));
 
             //Create transaction
-            Transaction transaction = new Transaction(globalId,transactionType,new BigDecimal(amount),wallet,currency,description,updatedBy);
+            Transaction transaction = new Transaction(globalId,transactionType,new BigDecimal(amount),wallet, currencyType,description,updatedBy);
 
             return transactionRepository.save(transaction);
 

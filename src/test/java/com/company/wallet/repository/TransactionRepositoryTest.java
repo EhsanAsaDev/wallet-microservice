@@ -1,7 +1,7 @@
 package com.company.wallet.repository;
 
 
-import com.company.wallet.entities.Currency;
+import com.company.wallet.entities.CurrencyType;
 import com.company.wallet.entities.Transaction;
 import com.company.wallet.entities.TransactionType;
 import com.company.wallet.entities.Wallet;
@@ -31,15 +31,11 @@ import static org.junit.Assert.*;
 @DataJpaTest
 @PropertySource("classpath:application.properties")
 public class TransactionRepositoryTest {
-    public static final String TEST_CURRENCY = "EUR";
+    public static final String TEST_CURRENCY = "RIAL";
     public static final String LAST_UPDATED_BY = "user";
     public static final String USER = "user";
-
-    @Value("${application.transaction.type.credit}")
-    String credit;
-
-    @Value("${application.transaction.type.debit}")
-    String debit;
+    public static final String credit = "CREDIT";
+    public static final String debit = "DEBIT";
 
     @Autowired
     private TestEntityManager entityManager;
@@ -48,17 +44,11 @@ public class TransactionRepositoryTest {
     private TransactionRepository transactionRepository;
 
     @Autowired
-    private TransactionTypeRepository transactionTypeRepository;
-
-    @Autowired
     private WalletRepository walletRepository;
-
-    @Autowired
-    private CurrencyRepository currencyRepository;
 
     private Wallet wallet1;
     private Wallet wallet2;
-    private Currency currency;
+    private CurrencyType currencyType;
     private TransactionType typeCredit;
     private TransactionType typeDebit;
     private Transaction transaction;
@@ -70,23 +60,18 @@ public class TransactionRepositoryTest {
 
     @Before
     public void before(){
-        currency = new Currency(CURRENCY_ID, TEST_CURRENCY,LAST_UPDATED_BY );
-        entityManager.persistAndFlush(currency);
+        currencyType = CurrencyType.RIAL;
 
-        wallet1 = new Wallet( USER ,new Currency(CURRENCY_ID, TEST_CURRENCY,LAST_UPDATED_BY),new BigDecimal(0),LAST_UPDATED_BY);
-        wallet2 = new Wallet( USER ,new Currency(CURRENCY_ID, TEST_CURRENCY,LAST_UPDATED_BY),new BigDecimal(0),LAST_UPDATED_BY);
+        wallet1 = new Wallet( USER ,CurrencyType.RIAL,new BigDecimal(0),LAST_UPDATED_BY);
+        wallet2 = new Wallet( USER ,CurrencyType.RIAL,new BigDecimal(0),LAST_UPDATED_BY);
 
         entityManager.persist(wallet1);
         entityManager.persist(wallet2);
         entityManager.flush();
 
-        typeCredit = new TransactionType(credit,"credit trn", LAST_UPDATED_BY);
-        typeDebit = new TransactionType(debit,"debit trn", LAST_UPDATED_BY);
-        entityManager.persist(typeCredit);
-        entityManager.persist(typeDebit);
-        entityManager.flush();
-
-        transaction = new Transaction(String.valueOf(globalIdCounter++),typeCredit,new BigDecimal(20),wallet1,currency,"Credit transaction");
+        typeCredit = TransactionType.CREDIT;
+        typeDebit = TransactionType.DEBIT;
+        transaction = new Transaction(String.valueOf(globalIdCounter++),typeCredit,new BigDecimal(20),wallet1, currencyType,"Credit transaction");
         entityManager.persist(transaction);
         entityManager.flush();
 
@@ -103,12 +88,12 @@ public class TransactionRepositoryTest {
     @Test
     public void testSave_Credit() {
         int counter = globalIdCounter++;
-        Transaction transaction = new Transaction(String.valueOf(counter),typeCredit,new BigDecimal(20),wallet2,currency,"Credit transaction");
+        Transaction transaction = new Transaction(String.valueOf(counter),typeCredit,new BigDecimal(20),wallet2, currencyType,"Credit transaction");
         Transaction found = transactionRepository.save(transaction);
         assertNotNull(found);
-        assertTrue(found.getCurrency().getName().equals(TEST_CURRENCY));
+        assertTrue(found.getCurrencyType().name().equals(TEST_CURRENCY));
         assertTrue(found.getAmount().equals(new BigDecimal(20)));
-        assertTrue(found.getType().getId().equals(credit));
+        assertTrue(found.getType().name().equals(credit));
         assertTrue(found.getGlobalId().equals(String.valueOf(counter)));
         assertTrue(found.getWallet().getId().equals(wallet2.getId()));
     }
@@ -116,33 +101,33 @@ public class TransactionRepositoryTest {
     @Test
     public void testSave_Debit() {
         int counter = globalIdCounter++;
-        Transaction transactionDebit = new Transaction(String.valueOf(counter),typeCredit,new BigDecimal(-10),wallet1,currency,"Credit transaction");
+        Transaction transactionDebit = new Transaction(String.valueOf(counter),typeCredit,new BigDecimal(-10),wallet1, currencyType,"Credit transaction");
         Transaction found = transactionRepository.save(transactionDebit );
         assertNotNull(found);
-        assertTrue(found.getCurrency().getName().equals(TEST_CURRENCY));
+        assertTrue(found.getCurrencyType().name().equals(TEST_CURRENCY));
         assertTrue(found.getAmount().equals(new BigDecimal(-10)));
-        assertTrue(found.getType().getId().equals(credit));
+        assertTrue(found.getType().name().equals(credit));
         assertTrue(found.getGlobalId().equals(String.valueOf(counter)));
         assertTrue(found.getWallet().getId().equals(wallet1.getId()));
     }
 
-    @Test
+/*    @Test
     public void whenSave_FailWrongCurrency() {
-        Currency currency = currencyRepository.findByName("AAA");
+        CurrencyType currencyType = currencyRepository.findByName("AAA");
         int counter = globalIdCounter++;
-        Transaction transaction = new Transaction(String.valueOf(counter),typeCredit,new BigDecimal(20),wallet2,currency,"Credit transaction");
+        Transaction transaction = new Transaction(String.valueOf(counter),typeCredit,new BigDecimal(20),wallet2, currencyType,"Credit transaction");
         try{
             Transaction found = transactionRepository.save(transaction);
             fail();
         } catch(ConstraintViolationException ex){
             assertTrue( ex.getMessage().contains("Transaction currency must be provided"));
         }
-    }
+    }*/
 
     @Test
     public void whenSave_NotUniqueGlobalId() {
         int counter = globalIdCounter - 1;
-        Transaction transaction = new Transaction(String.valueOf(counter),typeCredit,new BigDecimal(20),wallet2,currency,"Credit transaction");
+        Transaction transaction = new Transaction(String.valueOf(counter),typeCredit,new BigDecimal(20),wallet2, currencyType,"Credit transaction");
         try{
             Transaction found = transactionRepository.save(transaction);
             entityManager.flush();
@@ -155,7 +140,7 @@ public class TransactionRepositoryTest {
     @Test
     public void whenSave_NoBalance() {
         int counter =  globalIdCounter++;
-        Transaction transaction = new Transaction(String.valueOf(counter),typeCredit,null,wallet2,currency,"Credit transaction");
+        Transaction transaction = new Transaction(String.valueOf(counter),typeCredit,null,wallet2, currencyType,"Credit transaction");
         try{
             Transaction found = transactionRepository.save(transaction);
             entityManager.flush();
@@ -171,7 +156,7 @@ public class TransactionRepositoryTest {
     public void whenSave_FailWrongWallet() {
         Wallet wallet = walletRepository.getOne(100);
         int counter = globalIdCounter++;
-        Transaction transaction = new Transaction(String.valueOf(counter),typeCredit,new BigDecimal(20),wallet,currency,"Credit transaction");
+        Transaction transaction = new Transaction(String.valueOf(counter),typeCredit,new BigDecimal(20),wallet, currencyType,"Credit transaction");
         try{
             Transaction found = transactionRepository.save(transaction);
             entityManager.flush();
@@ -181,11 +166,11 @@ public class TransactionRepositoryTest {
         }
     }
 
-    @Test
+/*    @Test
     public void whenSave_FailWrongType() {
         TransactionType type = transactionTypeRepository.getOne("wrong");
         int counter = globalIdCounter++;
-        Transaction transaction = new Transaction(String.valueOf(counter),type,new BigDecimal(20),wallet2,currency,"Credit transaction");
+        Transaction transaction = new Transaction(String.valueOf(counter),type,new BigDecimal(20),wallet2, currencyType,"Credit transaction");
         try{
             Transaction found = transactionRepository.save(transaction);
             entityManager.flush();
@@ -193,5 +178,5 @@ public class TransactionRepositoryTest {
         } catch(DataIntegrityViolationException ex){
             assertTrue( ex.getMessage().contains("could not execute statement"));
         }
-    }
+    }*/
 }

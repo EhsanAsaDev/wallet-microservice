@@ -3,48 +3,28 @@
 
 --CREATE SEQUENCE IF NOT EXISTS schema_wallet.HIBERNATE_SEQUENCE START WITH 1 INCREMENT BY 1;
 
-CREATE TABLE IF NOT EXISTS currency
+CREATE TABLE  WALLET (
+id NUMBER(38, 0) NOT NULL,
+user_id VARCHAR2(50) NOT NULL,
+version NUMBER(11) DEFAULT 0 NOT NULL,
+balance DECIMAL(21, 2) DEFAULT 0 NOT NULL,
+currency_type	VARCHAR2(50) NOT NULL,
+last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+last_updated_by VARCHAR2(50) DEFAULT 'admin',
+CONSTRAINT PK_WALLET PRIMARY KEY (id));
+
+
+
+
+CREATE TABLE TRANSACTION
 (
-    id SERIAL PRIMARY KEY,
-    name character varying(3) UNIQUE NOT NULL,
-    --id character varying(3)  PRIMARY KEY,
-    last_updated TIMESTAMP DEFAULT now(),
-	last_updated_by VARCHAR DEFAULT 'admin'
-);
-
-
-CREATE TABLE IF NOT EXISTS  wallet
-(
-id SERIAL PRIMARY KEY,
-user_id VARCHAR NOT NULL,
-version INT(11) DEFAULT 0 NOT NULL,
-balance NUMERIC(15,2) DEFAULT 0 NOT NULL,
---currency_id	VARCHAR(3) REFERENCES currency (id) NOT NULL,
-currency_id	integer REFERENCES currency (id) NOT NULL,
-last_updated TIMESTAMP DEFAULT now(),
-last_updated_by VARCHAR DEFAULT 'admin'
-);
-
-
-CREATE TABLE IF NOT EXISTS transaction_type
-(
-id VARCHAR PRIMARY KEY,
-description TEXT,
-last_updated TIMESTAMP DEFAULT now(),
-last_updated_by VARCHAR DEFAULT 'admin'
-);
-
-
-CREATE TABLE IF NOT EXISTS transaction
-(
-id SERIAL PRIMARY KEY,
-global_id VARCHAR UNIQUE NOT NULL,
-type_id VARCHAR NOT NULL REFERENCES transaction_type (id),
-amount NUMERIC(15,2) NOT NULL,
-wallet_id integer REFERENCES wallet(id),
---currency_id	VARCHAR(3) REFERENCES currency (id) NOT NULL,
-currency_id	integer REFERENCES currency (id) NOT NULL,
-description TEXT,
-last_updated TIMESTAMP DEFAULT now(),
-last_updated_by VARCHAR DEFAULT 'admin'
+id NUMBER(38, 0) NOT NULL,
+global_id VARCHAR2(50) NOT NULL,
+type VARCHAR2(50) NOT NULL,
+amount DECIMAL(21, 2) DEFAULT 0 NOT NULL,
+wallet_id NUMBER(38, 0) REFERENCES wallet(id),
+currency_type VARCHAR2(50) NOT NULL,
+description VARCHAR2(250),
+last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+last_updated_by VARCHAR2(50) DEFAULT 'admin'
 );

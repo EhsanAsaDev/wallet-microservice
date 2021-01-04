@@ -1,6 +1,6 @@
 package com.company.wallet.repository;
 
-import com.company.wallet.entities.Currency;
+import com.company.wallet.entities.CurrencyType;
 import com.company.wallet.entities.Wallet;
 
 import javax.validation.ConstraintViolationException;
@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.springframework.orm.hibernate5.HibernateOptimisticLockingFailureException;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.math.BigDecimal;
@@ -28,7 +27,7 @@ import static org.junit.Assert.*;
 @RunWith(SpringRunner.class)
 @DataJpaTest
 public class WalletRepositoryTest {
-    public static final String TEST_CURRENCY = "EUR";
+    public static final String TEST_CURRENCY = "RIAL";
     public static final String LAST_UPDATED_BY = "user";
     public static final String USER = "user";
     public static final Integer CURRENCY_ID = 1;
@@ -43,22 +42,19 @@ public class WalletRepositoryTest {
     @Autowired
     private WalletRepository walletRepository2;
 
-    @Autowired
-    private CurrencyRepository currencyRepository;
 
     private Wallet wallet1;
     private Wallet wallet2;
-    private Currency currency;
+    private CurrencyType currencyType;
 
 
     @Before
     public void before(){
-        currency = new Currency(CURRENCY_ID, TEST_CURRENCY,LAST_UPDATED_BY );
-        entityManager.persistAndFlush(currency);
+        currencyType = CurrencyType.RIAL;
 
-        wallet1 = new Wallet( USER ,new Currency(CURRENCY_ID,TEST_CURRENCY,LAST_UPDATED_BY),new BigDecimal(0),LAST_UPDATED_BY);
+        wallet1 = new Wallet( USER ,CurrencyType.RIAL,new BigDecimal(0),LAST_UPDATED_BY);
 
-        wallet2 = new Wallet(USER,new Currency(CURRENCY_ID,TEST_CURRENCY,LAST_UPDATED_BY),new BigDecimal(0),LAST_UPDATED_BY);
+        wallet2 = new Wallet(USER,CurrencyType.RIAL,new BigDecimal(0),LAST_UPDATED_BY);
 
 
         entityManager.persist(wallet1);
@@ -73,7 +69,7 @@ public class WalletRepositoryTest {
         assertTrue(found.isPresent());
 
         // then
-        assertTrue(found.get().getCurrency().getName().equals(TEST_CURRENCY));
+        assertTrue(found.get().getCurrencyType().name().equals(TEST_CURRENCY));
         assertTrue(found.get().getUserId().equals(USER));
         assertTrue(found.get().getBalance().equals(new BigDecimal(0)));
     }
@@ -118,36 +114,36 @@ public class WalletRepositoryTest {
 
     @Test
     public void whenSave_Success() {
-        Wallet wallet = new Wallet(USER,new Currency(CURRENCY_ID,TEST_CURRENCY,LAST_UPDATED_BY),new BigDecimal(0),LAST_UPDATED_BY);
+        Wallet wallet = new Wallet(USER,CurrencyType.RIAL,new BigDecimal(0),LAST_UPDATED_BY);
         Wallet found = walletRepository.save(wallet);
         assertNotNull(found);
-        assertTrue(found.getCurrency().getName().equals(TEST_CURRENCY));
+        assertTrue(found.getCurrencyType().name().equals(TEST_CURRENCY));
         assertTrue(found.getBalance().equals(new BigDecimal(0)));
     }
 
-    @Test
+    /*@Test
     public void whenSave_FailWrongCurrency() {
-        Currency currency = currencyRepository.findByName("AAA");
-        Wallet wallet = new Wallet(USER,currency,new BigDecimal(0),LAST_UPDATED_BY);
+        CurrencyType currencyType = currencyRepository.findByName("AAA");
+        Wallet wallet = new Wallet(USER, currencyType,new BigDecimal(0),LAST_UPDATED_BY);
         try{
         Wallet found = walletRepository.save(wallet);
         fail();
         } catch(ConstraintViolationException ex){
             assertTrue( ex.getMessage().contains("Wallet currency must be provided"));
         }
-    }
+    }*/
 
-    @Test
+    /*@Test
     public void whenSave_FailWrongCurrencyLong() {
-        Currency currency = currencyRepository.findByName("AAA+++");
-        Wallet wallet = new Wallet(USER,currency,new BigDecimal(0),LAST_UPDATED_BY);
+        CurrencyType currencyType = currencyRepository.findByName("AAA+++");
+        Wallet wallet = new Wallet(USER, currencyType,new BigDecimal(0),LAST_UPDATED_BY);
         try{
             Wallet found = walletRepository.save(wallet);
             fail();
         } catch(ConstraintViolationException ex){
             assertTrue( ex.getMessage().contains("Wallet currency must be provided"));
         }
-    }
+    }*/
 
 
 
@@ -167,7 +163,7 @@ public class WalletRepositoryTest {
             Optional<Wallet> found = walletRepository.findById(wallet1.getId());
             Wallet updated = found.get();
 
-            Wallet dirtyWallet = new Wallet(updated.getUserId(), updated.getCurrency(), updated.getBalance().add(BigDecimal.valueOf(400)), updated.getLastUpdatedBy());
+            Wallet dirtyWallet = new Wallet(updated.getUserId(), updated.getCurrencyType(), updated.getBalance().add(BigDecimal.valueOf(400)), updated.getLastUpdatedBy());
             dirtyWallet.setId(updated.getId());
             dirtyWallet.setVersion(updated.getVersion());
 

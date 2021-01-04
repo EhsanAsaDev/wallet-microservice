@@ -1,10 +1,9 @@
 package com.company.wallet.service;
 
-import com.company.wallet.entities.Currency;
+import com.company.wallet.entities.CurrencyType;
 import com.company.wallet.entities.Wallet;
 import com.company.wallet.exceptions.ErrorMessage;
 import com.company.wallet.exceptions.WalletException;
-import com.company.wallet.repository.CurrencyRepository;
 import com.company.wallet.repository.TransactionRepository;
 import com.company.wallet.repository.WalletRepository;
 import com.company.wallet.helper.Helper;
@@ -56,7 +55,7 @@ public class WalletServiceTest {
             return new MethodValidationPostProcessor();
         }
     }
-    public static final String TEST_CURRENCY = "EUR";
+    public static final CurrencyType TEST_CURRENCY = CurrencyType.RIAL;
     public static final String LAST_UPDATED_BY = "user";
     public static final String USER = "user";
     public static final Integer CURRENCY_ID = 1;
@@ -73,19 +72,16 @@ public class WalletServiceTest {
     @MockBean
     private TransactionRepository transactionRepository;
 
-    @MockBean
-    private CurrencyRepository currencyRepository;
-
-    Currency currency;
+    CurrencyType currencyType;
     Wallet wallet1;
     Wallet wallet2;
 
     @Before
     public void setUp() {
-        currency = new Currency(CURRENCY_ID, TEST_CURRENCY, LAST_UPDATED_BY);
-        wallet1 = new Wallet(USER,currency, new BigDecimal(0), LAST_UPDATED_BY);
+        currencyType = CurrencyType.RIAL;
+        wallet1 = new Wallet(USER, currencyType, new BigDecimal(0), LAST_UPDATED_BY);
         wallet1.setId(1);
-        wallet2 = new Wallet(USER,currency, new BigDecimal(20), LAST_UPDATED_BY);
+        wallet2 = new Wallet(USER, currencyType, new BigDecimal(20), LAST_UPDATED_BY);
         wallet2.setId(2);
 
         //walletService.findAll
@@ -102,10 +98,7 @@ public class WalletServiceTest {
                 .thenReturn(new ArrayList<Wallet>());
 
         //createWallet
-        Currency wrong = new Currency(2, "Wrong",LAST_UPDATED_BY) ;
-        Mockito.when(currencyRepository.findByName("Wrong")).thenReturn(wrong);
-        Mockito.when(walletRepository.save(new Wallet(USER,wrong, new BigDecimal(0), LAST_UPDATED_BY))).thenThrow(new ObjectNotFoundException("",""));
-        Mockito.when(currencyRepository.findByName(TEST_CURRENCY)).thenReturn(currency);
+
         Mockito.when(walletRepository.save(wallet1)).thenReturn(wallet1);
         Mockito.when(walletRepository.save(wallet2)).thenReturn(wallet2);
     }
@@ -172,12 +165,12 @@ public class WalletServiceTest {
         Wallet found = walletService.createWallet(USER,null);
     }
 
-    @Test(expected = ConstraintViolationException.class)
+   /* @Test(expected = ConstraintViolationException.class)
     public void testCreateWallet_Blank() throws WalletException {
         Wallet found = walletService.createWallet(USER,"");
-    }
+    }*/
 
-    @Test
+  /*  @Test
     public void testCreateWallet_CurrencyNotFound() throws WalletException {
         try {
         Wallet found = walletService.createWallet(USER,"Wrong");
@@ -185,7 +178,7 @@ public class WalletServiceTest {
             assertEquals(e.getMessage(),String.format(ErrorMessage.NO_CURRENCY_PRESENT,"Wrong"));
             assertEquals(e.getErrorCode(),HttpStatus.BAD_REQUEST.value());
         }
-    }
+    }*/
 
     @Test
     public void testCreateWallet_Success() throws WalletException {

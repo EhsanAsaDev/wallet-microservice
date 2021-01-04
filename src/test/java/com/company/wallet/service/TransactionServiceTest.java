@@ -1,18 +1,15 @@
 package com.company.wallet.service;
 
-import com.company.wallet.entities.Currency;
+import com.company.wallet.entities.CurrencyType;
 import com.company.wallet.entities.Transaction;
 import com.company.wallet.entities.TransactionType;
 import com.company.wallet.entities.Wallet;
 import com.company.wallet.exceptions.ErrorMessage;
 import com.company.wallet.exceptions.WalletException;
 import com.company.wallet.helper.Helper;
-import com.company.wallet.repository.CurrencyRepository;
 import com.company.wallet.repository.TransactionRepository;
-import com.company.wallet.repository.TransactionTypeRepository;
 import com.company.wallet.repository.WalletRepository;
 import com.company.wallet.helper.HelperImpl;
-import org.hibernate.ObjectNotFoundException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -85,15 +82,9 @@ public class TransactionServiceTest {
     private TransactionRepository transactionRepository;
 
     @MockBean
-    private CurrencyRepository currencyRepository;
-
-    @MockBean
-    private TransactionTypeRepository transactionTypeRepository;
-
-    @MockBean
     private WalletService walletService;
 
-    private Currency currency;
+    private CurrencyType currencyType;
     private Wallet wallet1;
     private Wallet wallet2;
     private TransactionType typeCredit;
@@ -103,16 +94,16 @@ public class TransactionServiceTest {
 
     @Before
     public void setUp() throws WalletException {
-        currency = new Currency(CURRENCY_ID, TEST_CURRENCY, LAST_UPDATED_BY);
-        wallet1 = new Wallet(USER,currency, new BigDecimal(0), LAST_UPDATED_BY);
+        currencyType = CurrencyType.RIAL;
+        wallet1 = new Wallet(USER, currencyType, new BigDecimal(0), LAST_UPDATED_BY);
         wallet1.setId(1);
-        wallet2 = new Wallet(USER,currency, new BigDecimal(40), LAST_UPDATED_BY);
+        wallet2 = new Wallet(USER, currencyType, new BigDecimal(40), LAST_UPDATED_BY);
         wallet2.setId(2);
-        typeCredit = new TransactionType(credit,"credit trn", LAST_UPDATED_BY);
-        typeDebit = new TransactionType(debit,"debit trn", LAST_UPDATED_BY);
-        transactionCredit = new Transaction(String.valueOf(globalIdCounter++) ,typeCredit,new BigDecimal(20),wallet1,currency,"Credit transaction");
+        typeCredit = TransactionType.CREDIT;
+        typeDebit = TransactionType.DEBIT;
+        transactionCredit = new Transaction(String.valueOf(globalIdCounter++) ,typeCredit,new BigDecimal(20),wallet1, currencyType,"Credit transaction");
         transactionCredit.setId(5);
-        transactionDebit = new Transaction(String.valueOf(globalIdCounter++) ,typeDebit,new BigDecimal(20),wallet2,currency,"Debit transaction");
+        transactionDebit = new Transaction(String.valueOf(globalIdCounter++) ,typeDebit,new BigDecimal(20),wallet2, currencyType,"Debit transaction");
         transactionDebit.setId(6);
 
 
@@ -126,13 +117,7 @@ public class TransactionServiceTest {
 
 
         //createTransaction
-        Currency wrong = new Currency(2, "Wrong",LAST_UPDATED_BY);
-        Mockito.when(currencyRepository.findByName("Wrong")).thenReturn(wrong);
-        Mockito.when(walletRepository.save(new Wallet(USER,wrong, new BigDecimal(0), LAST_UPDATED_BY))).thenThrow(new ObjectNotFoundException("",""));
 
-        Mockito.when(currencyRepository.findByName(TEST_CURRENCY)).thenReturn(currency);
-        Mockito.when(transactionTypeRepository.getOne(typeCredit.getId())).thenReturn(typeCredit);
-        Mockito.when(transactionTypeRepository.getOne(typeDebit.getId())).thenReturn(typeDebit);
         Mockito.when(walletService.findById(wallet1.getId())).thenReturn(wallet1);
         Mockito.when(walletService.findById(wallet2.getId())).thenReturn(wallet2);
         Mockito.when(walletService.findById(1001)).thenReturn(null);
@@ -167,7 +152,7 @@ public class TransactionServiceTest {
         Mockito.when(walletService.updateWalletAmount(wallet1,String.valueOf(amount),true)).thenReturn(wallet1);
         Mockito.when(transactionRepository.save(Mockito.any(Transaction.class))).thenReturn(transactionCredit);
         int counter = globalIdCounter++;
-        Transaction found = transactionService.createTransaction(String.valueOf(counter),currency.getName(),wallet1.getId().toString(),typeCredit.getId(),String.valueOf(amount),"Success trn");
+        Transaction found = transactionService.createTransaction(String.valueOf(counter), currencyType,wallet1.getId().toString(),typeCredit,String.valueOf(amount),"Success trn");
         assertNotNull(found);
         assertTrue(found.getId().equals(transactionCredit.getId()) );
     }
@@ -178,7 +163,7 @@ public class TransactionServiceTest {
         Mockito.when(walletService.updateWalletAmount(wallet2,String.valueOf(amount),false)).thenReturn(wallet2);
         Mockito.when(transactionRepository.save(Mockito.any(Transaction.class))).thenReturn(transactionDebit);
         int counter = globalIdCounter++;
-        Transaction found = transactionService.createTransaction(String.valueOf(counter),currency.getName(),wallet2.getId().toString(), typeDebit.getId(),String.valueOf(amount),"Success trn");
+        Transaction found = transactionService.createTransaction(String.valueOf(counter), currencyType,wallet2.getId().toString(), typeDebit,String.valueOf(amount),"Success trn");
         assertNotNull(found);
         assertTrue(found.getId().equals(transactionDebit.getId()) );
     }
@@ -192,7 +177,7 @@ public class TransactionServiceTest {
                 thenThrow(new WalletException(error, HttpStatus.BAD_REQUEST.value()));
         Mockito.when(transactionRepository.save(Mockito.any(Transaction.class))).thenReturn(transactionDebit);
         try {
-            Transaction found = transactionService.createTransaction(String.valueOf(counter),currency.getName(),wallet2.getId().toString(), typeDebit.getId(),String.valueOf(amount),"Success trn");
+            Transaction found = transactionService.createTransaction(String.valueOf(counter), currencyType,wallet2.getId().toString(), typeDebit,String.valueOf(amount),"Success trn");
             fail();
         } catch (WalletException ex){
             assertEquals(ex.getMessage(),String.format(ErrorMessage.NOT_ENOUGH_FUNDS,wallet2.getId(),String.valueOf(amount)));
@@ -208,7 +193,7 @@ public class TransactionServiceTest {
         Mockito.when(walletService.updateWalletAmount(wallet1,String.valueOf(amount),true)).thenReturn(wallet1);
         Mockito.when(transactionRepository.save(Mockito.any(Transaction.class))).thenReturn(transactionCredit);
         try {
-            Transaction found = transactionService.createTransaction(String.valueOf(counter),currency.getName(),notFoundWalletId,typeCredit.getId(),String.valueOf(amount),"No wallet");
+            Transaction found = transactionService.createTransaction(String.valueOf(counter), currencyType,notFoundWalletId,typeCredit,String.valueOf(amount),"No wallet");
             fail();
         } catch (WalletException ex){
             assertEquals(ex.getMessage(),String.format(ErrorMessage.NO_WALLET_FOUND, notFoundWalletId));
@@ -224,7 +209,7 @@ public class TransactionServiceTest {
         Mockito.when(transactionRepository.save(Mockito.any(Transaction.class))).thenReturn(transactionCredit);
         int counter = globalIdCounter++;
         try {
-            Transaction found = transactionService.createTransaction(String.valueOf(counter), currency.getName(), wallet1.getId().toString(), typeCredit.getId(), wrongAmount, "Fail trn");
+            Transaction found = transactionService.createTransaction(String.valueOf(counter), currencyType, wallet1.getId().toString(), typeCredit, wrongAmount, "Fail trn");
         }catch (WalletException ex){
             assertEquals(ex.getMessage(),String.format(NUMBER_FORMAT_MISMATCH,wrongAmount));
             assertEquals(ex.getErrorCode(),HttpStatus.BAD_REQUEST.value());

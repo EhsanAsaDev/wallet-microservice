@@ -1,24 +1,20 @@
 package com.company.wallet.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.google.gson.annotations.Expose;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import org.springframework.validation.annotation.Validated;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.Date;
-import java.util.Objects;
 
 /**
  *  Transaction entity.
  *
- *  @author Elena Medvedeva
+ *  @author EhsanASaDev
  */
 @Entity
-@Table(name = "transaction")
+@Table(name = "TRANSACTION")
 @EntityListeners(AuditingEntityListener.class)
 public class Transaction {
     @Id
@@ -31,9 +27,9 @@ public class Transaction {
     @Column(name = "global_id", unique = true, nullable = false)
     private String globalId;
 
-    @NotNull(message = "Trnansaction typeId must be provided")
-    @ManyToOne
-    @JoinColumn(name = "type_id")
+    @NotNull(message = "Transaction type must be provided")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type")
     private TransactionType type;
 
     @NotNull(message = "Transaction amount must be provided")
@@ -45,10 +41,10 @@ public class Transaction {
     @JoinColumn(name = "wallet_id")
     private Wallet wallet;
 
-    @NotNull(message = "Transaction currency must be provided")
-    @ManyToOne
-    @JoinColumn(name = "currency_id")
-    private Currency currency;
+    @NotNull(message = "Currency Type must be provided")
+    @Column(name = "currency_type")
+    @Enumerated(EnumType.STRING)
+    private CurrencyType currencyType;
 
     @Column(name = "description")
     String description;
@@ -62,18 +58,18 @@ public class Transaction {
 
     public Transaction(){ }
 
-    public Transaction( String globalId, TransactionType type, BigDecimal amount,  Wallet wallet, Currency currency, String description) {
+    public Transaction(String globalId, TransactionType type, BigDecimal amount, Wallet wallet, CurrencyType currencyType, String description) {
         this.globalId = globalId;
         this.type = type;
         this.amount = amount;
         this.wallet = wallet;
-        this.currency = currency;
+        this.currencyType = currencyType;
         this.description = description;
         this.lastUpdated = new Date();
     }
 
-    public Transaction( String globalId, TransactionType type, BigDecimal amount,  Wallet wallet, Currency currency, String description, String lastUpdatedBy) {
-       this(globalId,type,amount,wallet,currency,description);
+    public Transaction(String globalId, TransactionType type, BigDecimal amount, Wallet wallet, CurrencyType currencyType, String description, String lastUpdatedBy) {
+       this(globalId,type,amount,wallet, currencyType,description);
        this.lastUpdatedBy = lastUpdatedBy;
     }
     public Integer getId() {
@@ -116,12 +112,12 @@ public class Transaction {
         this.wallet = wallet;
     }
 
-    public Currency getCurrency() {
-        return currency;
+    public CurrencyType getCurrencyType() {
+        return currencyType;
     }
 
-    public void setCurrency(Currency currency) {
-        this.currency = currency;
+    public void setCurrencyType(CurrencyType currencyType) {
+        this.currencyType = currencyType;
     }
 
     public String getDescription() {

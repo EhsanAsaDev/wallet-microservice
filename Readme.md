@@ -99,7 +99,7 @@ Http POST endpoints:
 With the following JSON in the body:
 ``` 
 {
-"currency":"{currency}",
+"currencyType":"{currencyType}",
 "userId":"{userId}"
 }
 ``` 
@@ -107,18 +107,18 @@ Creates new wallet.
 e.g.
 ``` 
 {
-"currency":"EUR",
+"currencyType":"EUR",
 "userId":"new-user"
 }
 ``` 
-Will create new wallet with currency EUR and userId=new-user.
-The currency id should be present in the reference table 'currency'.
+Will create new wallet with currencyType EUR and userId=new-user.
+The currencyType id should be present in the reference table 'currencyType'.
 
 2. http://localhost:8080/transactions
 With the following JSON in the body:
 ``` 
 {"globalId":"557",
-"currency":"EUR",
+"currencyType":"EUR",
 "walletId": "2",
 "amount":"20",
 "transactionTypeId":"D",
@@ -129,7 +129,7 @@ for credit transaction.
 ``` 
 will create credit transaction.
 {"globalId":"558",
-"currency":"EUR",
+"currencyType":"EUR",
 "walletId": "2",
 "amount":"20",
 "transactionTypeId":"D",
@@ -139,8 +139,8 @@ will create credit transaction.
 for debit transaction.
 Creates transaction.
 'globalId' must be unique.
-'currency','transactionTypeId' and 'walletId' must be present in the db.
-'currency' should be the same as in wallet.
+'currencyType','transactionTypeId' and 'walletId' must be present in the db.
+'currencyType' should be the same as in wallet.
 
 ## Technology used
 

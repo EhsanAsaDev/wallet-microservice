@@ -12,10 +12,10 @@ import java.util.List;
 /**
  *  Wallet entity.
  *
- *  @author Elena Medvedeva
+ *  @author EhsanASaDev
  */
 @Entity
-@Table(name = "wallet")
+@Table(name = "WALLET")
 @EntityListeners(AuditingEntityListener.class)
 public class Wallet {
 
@@ -38,10 +38,10 @@ public class Wallet {
     private BigDecimal balance;
 
 
-    @NotNull(message = "Wallet currency must be provided")
-    @ManyToOne
-    @JoinColumn(name = "currency_id")
-    private Currency currency;
+    @NotNull(message = "Currency Type must be provided")
+    @Column(name = "currency_type")
+    @Enumerated(EnumType.STRING)
+    private CurrencyType currencyType;
 
     @Column(name = "last_updated")
     @Temporal(TemporalType.TIMESTAMP)
@@ -56,15 +56,15 @@ public class Wallet {
     public Wallet(){
     }
 
-    public Wallet(String userId, Currency currency, BigDecimal balance) {
+    public Wallet(String userId, CurrencyType currencyType, BigDecimal balance) {
         this.userId = userId;
         this.balance = balance;
-        this.currency = currency;
+        this.currencyType = currencyType;
         this.lastUpdated = new Date();
     }
 
-    public Wallet(String userId, Currency currency, BigDecimal balance, String lastUpdatedBy) {
-        this(userId, currency,balance);
+    public Wallet(String userId, CurrencyType currencyType, BigDecimal balance, String lastUpdatedBy) {
+        this(userId, currencyType,balance);
         this.lastUpdatedBy = lastUpdatedBy;
     }
 
@@ -85,12 +85,12 @@ public class Wallet {
         this.balance = balance;
     }
 
-    public Currency getCurrency() {
-        return currency;
+    public CurrencyType getCurrencyType() {
+        return currencyType;
     }
 
-    public void setCurrency(Currency currency) {
-        this.currency = currency;
+    public void setCurrencyType(CurrencyType currencyType) {
+        this.currencyType = currencyType;
     }
 
     public Date getLastUpdated() {
